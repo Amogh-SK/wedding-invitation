@@ -69,25 +69,27 @@
   updateCountdown();
   setInterval(updateCountdown, 1000);
 
-  // Scratch foil: draw an opaque gold star on the canvas, then erase it only while dragging.
+  // Scratch foil. The canvas uses the exact same star geometry and aspect ratio as the SVG beneath it.
+  // The foil is freshly painted on every page load; no scratch state is stored between visits.
   const canvas = document.getElementById('scratchCanvas');
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const wrap = canvas.parentElement;
-  let drawing = false, revealed = false, lastPoint = null;
+  let drawing = false, revealed = false, lastPoint = null, baselineMask = null, baselinePixels = 0;
 
   function starPath(context, w, h) {
-    const cx = w / 2, cy = h / 2;
-    const outerX = w * 0.47, outerY = h * 0.47;
-    const innerX = outerX * 0.48, innerY = outerY * 0.48;
+    // Match the SVG path in index.html (viewBox 0 0 240 230) exactly.
+    const sx = w / 240, sy = h / 230;
     context.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const angle = -Math.PI / 2 + i * Math.PI / 5;
-      const rX = i % 2 === 0 ? outerX : innerX;
-      const rY = i % 2 === 0 ? outerY : innerY;
-      const x = cx + Math.cos(angle) * rX;
-      const y = cy + Math.sin(angle) * rY;
-      if (i === 0) context.moveTo(x, y); else context.lineTo(x, y);
-    }
+    context.moveTo(120*sx, 12*sy);
+    context.lineTo(148*sx, 79*sy);
+    context.lineTo(221*sx, 84*sy);
+    context.lineTo(165*sx, 132*sy);
+    context.lineTo(182*sx, 204*sy);
+    context.lineTo(120*sx, 165*sy);
+    context.lineTo(58*sx, 204*sy);
+    context.lineTo(75*sx, 132*sy);
+    context.lineTo(19*sx, 84*sy);
+    context.lineTo(92*sx, 79*sy);
     context.closePath();
   }
 
@@ -98,13 +100,12 @@
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, rect.width, rect.height);
 
-    // Clip all foil artwork to the five-point star so the date underneath stays hidden.
     starPath(ctx, rect.width, rect.height);
     ctx.save();
     ctx.clip();
@@ -117,9 +118,7 @@
     grad.addColorStop(1, '#e4d09c');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, rect.width, rect.height);
-
-    // Fine flecks give the foil a subtle textured finish.
-    for (let i = 0; i < 520; i++) {
+    for (let i = 0; i < 700; i++) {
       const x = Math.random() * rect.width;
       const y = Math.random() * rect.height;
       ctx.fillStyle = i % 3 === 0 ? 'rgba(255,250,226,.75)' : 'rgba(92,73,39,.22)';
@@ -132,7 +131,21 @@
     ctx.strokeStyle = '#c4a65d';
     ctx.stroke();
     ctx.restore();
+
+    // Keep a baseline mask so transparent pixels outside the star never count as scratching.
+    const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    baselineMask = new Uint8Array(canvas.width * canvas.height);
+    baselinePixels = 0;
+    for (let i = 0, pixel = 0; i < image.data.length; i += 4, pixel++) {
+      if (image.data[i + 3] > 20) { baselineMask[pixel] = 1; baselinePixels++; }
+    }
     ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    canvas.style.opacity = '1';
+    canvas.style.display = 'block';
+    canvas.style.pointerEvents = 'auto';
+    wrap.style.touchAction = 'none';
   }
 
   function pointFromEvent(e) {
@@ -141,48 +154,61 @@
   }
 
   function scratchTo(point) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const scaled = { x: point.x * dpr, y: point.y * dpr };
     ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'destination-out';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = Math.max(30, wrap.clientWidth * .12);
+    ctx.lineWidth = Math.max(32 * dpr, wrap.clientWidth * dpr * .14);
     if (lastPoint) {
       ctx.beginPath();
       ctx.moveTo(lastPoint.x, lastPoint.y);
-      ctx.lineTo(point.x, point.y);
+      ctx.lineTo(scaled.x, scaled.y);
       ctx.stroke();
     } else {
       ctx.beginPath();
-      ctx.arc(point.x, point.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+      ctx.arc(scaled.x, scaled.y, ctx.lineWidth / 2, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
-    lastPoint = point;
+    lastPoint = scaled;
   }
 
   function checkProgress() {
-    if (revealed || !canvas.width || !canvas.height) return;
-    // Sample alpha values across the canvas to estimate how much foil has been removed.
+    if (revealed || !canvas.width || !canvas.height || !baselineMask || !baselinePixels) return;
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let transparent = 0, samples = 0;
-    for (let i = 3; i < pixels.length; i += 4 * 8) {
-      samples++;
-      if (pixels[i] < 40) transparent++;
+    let erased = 0;
+    // Sample every fourth pixel, but only pixels that belonged to the foil star at paint time.
+    for (let pixel = 0; pixel < baselineMask.length; pixel += 4) {
+      if (baselineMask[pixel] && pixels[pixel * 4 + 3] < 40) erased++;
     }
-    if (samples && transparent / samples > .13) {
+    const sampledFoil = baselinePixels / 4;
+    if (sampledFoil && erased / sampledFoil > .28) {
       revealed = true;
-      canvas.style.transition = 'opacity 1.1s ease';
+      drawing = false;
+      lastPoint = null;
+      canvas.style.transition = 'opacity 900ms ease';
       canvas.style.opacity = '0';
-      setTimeout(() => { canvas.style.display = 'none'; }, 1150);
+      canvas.style.pointerEvents = 'none';
+      // Release touch handling so normal page scrolling works immediately on iPhone.
+      wrap.style.touchAction = 'pan-y';
+      canvas.style.touchAction = 'pan-y';
+      setTimeout(() => { canvas.style.display = 'none'; }, 920);
       document.querySelector('.scratch-footnote').textContent = 'A little glimpse of forever, just for you ✦';
     }
   }
 
   canvas.addEventListener('pointerdown', e => {
     if (revealed) return;
+    // Repaint if a browser restored the page with a zero-sized/cleared canvas.
+    if (!canvas.width || !canvas.height || !baselineMask) paintFoil();
     drawing = true;
     lastPoint = null;
-    if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+    if (canvas.setPointerCapture) {
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    }
     scratchTo(pointFromEvent(e));
     e.preventDefault();
   });
@@ -200,8 +226,15 @@
   canvas.addEventListener('pointerup', endScratch);
   canvas.addEventListener('pointercancel', endScratch);
   canvas.addEventListener('lostpointercapture', endScratch);
-  window.addEventListener('resize', paintFoil);
-  if ('ResizeObserver' in window) new ResizeObserver(() => paintFoil()).observe(wrap);
+  window.addEventListener('resize', () => { if (!revealed) paintFoil(); });
+  if ('ResizeObserver' in window) new ResizeObserver(() => { if (!revealed) paintFoil(); }).observe(wrap);
+  window.addEventListener('pageshow', () => {
+    // Always start fresh, including when Safari restores this page from its back/forward cache.
+    revealed = false;
+    drawing = false;
+    lastPoint = null;
+    requestAnimationFrame(paintFoil);
+  });
   window.addEventListener('load', () => requestAnimationFrame(paintFoil));
   requestAnimationFrame(() => requestAnimationFrame(paintFoil));
   setTimeout(paintFoil, 250);

@@ -23,9 +23,9 @@ button{font:inherit}
 .curtain-folds{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 18px,rgba(21,35,22,.22) 23px,rgba(235,221,178,.16) 31px,rgba(24,38,24,.28) 43px,transparent 56px),linear-gradient(90deg,rgba(255,255,255,.1),transparent 13%,rgba(0,0,0,.18) 25%,transparent 38%,rgba(255,255,255,.1) 53%,rgba(0,0,0,.14) 70%,transparent 86%)}
 .curtain-edge{position:absolute;top:0;bottom:0;width:7px;background:linear-gradient(90deg,#6f572f,#f3df9c,#a48648,#f8e9b7);box-shadow:0 0 10px #1c2a1c55}.curtain-left .curtain-edge{right:0}.curtain-right .curtain-edge{left:0}
 .curtain-vine{position:absolute;top:7%;bottom:5%;width:52%;left:2%;opacity:.8}.curtain-vine svg{width:100%;height:100%}.curtain-right .curtain-vine{left:auto;right:2%;transform:scaleX(-1)}
-.open-seal{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(116px,34vw,158px);aspect-ratio:.86;border:0;color:#78613c;cursor:pointer;background:radial-gradient(ellipse at 50% 30%,#fff7e4,#e7d5ad 72%,#c7ad7d);clip-path:polygon(50% 0,59% 7%,70% 3%,77% 12%,89% 13%,91% 25%,100% 34%,95% 46%,100% 57%,90% 66%,90% 79%,77% 82%,69% 94%,58% 91%,50% 100%,41% 92%,29% 96%,22% 85%,10% 83%,10% 70%,0 61%,5% 49%,0 38%,10% 29%,10% 17%,23% 14%,31% 4%,42% 8%);filter:drop-shadow(0 8px 8px #17231877);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:opacity .5s ease,transform .5s ease;animation:sealFloat 4s ease-in-out infinite}
+.open-seal{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(150px,42vw,184px);aspect-ratio:.86;border:0;color:#78613c;cursor:pointer;background:radial-gradient(ellipse at 50% 30%,#fff7e4,#e7d5ad 72%,#c7ad7d);clip-path:polygon(50% 0,59% 7%,70% 3%,77% 12%,89% 13%,91% 25%,100% 34%,95% 46%,100% 57%,90% 66%,90% 79%,77% 82%,69% 94%,58% 91%,50% 100%,41% 92%,29% 96%,22% 85%,10% 83%,10% 70%,0 61%,5% 49%,0 38%,10% 29%,10% 17%,23% 14%,31% 4%,42% 8%);filter:drop-shadow(0 8px 8px #17231877);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:opacity .5s ease,transform .5s ease;animation:sealFloat 4s ease-in-out infinite}
 .open-seal:before{content:"";position:absolute;inset:8px;border:1px solid #bba06a;clip-path:inherit;pointer-events:none}
-.seal-top,.seal-bottom{font-size:1.05rem;color:#a58a54}.seal-label{font-family:"Cormorant Garamond",serif;font-size:clamp(.85rem,3vw,1rem);letter-spacing:.12em;line-height:1.05;text-align:center;font-weight:600}
+.seal-top,.seal-bottom{font-size:1.25rem;color:#a58a54}.seal-label{font-family:"Cormorant Garamond",serif;font-size:clamp(1.05rem,4.2vw,1.3rem);letter-spacing:.12em;line-height:1.05;text-align:center;font-weight:600}
 .open-caption{position:absolute;z-index:9;bottom:15%;left:0;right:0;text-align:center;color:#f1e4c8;letter-spacing:.07em;font-style:italic;font-size:1.1rem;text-shadow:0 2px 8px #142416}
 .skip-opening{position:absolute;z-index:10;right:15px;bottom:15px;border:1px solid #e8d5a080;background:#26382955;color:#f5ead5;border-radius:30px;padding:8px 13px;font-size:.75rem;opacity:.7;cursor:pointer}
 .opening.opened .curtain-left{transform:translateX(-101%)}.opening.opened .curtain-right{transform:translateX(101%)}
@@ -59,9 +59,9 @@ button{font:inherit}
 .script-heading{font-size:clamp(2.1rem,8vw,3rem);color:#5a4c3b;margin:0 0 10px}
 .scratch-section{background:#f7f0e3}
 .scratch-instruction{font-family:"Great Vibes",cursive;font-size:clamp(2.6rem,9vw,3.5rem);margin:12px 0 18px;color:#5d513f}
-.scratch-star-wrap{position:relative;width:min(78vw,330px);aspect-ratio:1/1;margin:8px auto 24px;touch-action:none;overflow:hidden;isolation:isolate}
+.scratch-star-wrap{position:relative;width:min(82vw,350px);aspect-ratio:240/230;margin:8px auto 24px;touch-action:none;overflow:hidden;isolation:isolate}
 .revealed-star{position:absolute;inset:0;display:grid;place-items:center}.revealed-star svg{width:100%;height:100%;filter:drop-shadow(0 7px 8px #54462a30)}
-#scratchCanvas{position:absolute;z-index:3;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;opacity:1;pointer-events:auto}
+#scratchCanvas{position:absolute;z-index:3;inset:0;display:block;width:100%;height:100%;touch-action:none;cursor:crosshair;opacity:1;pointer-events:auto;user-select:none;-webkit-user-select:none}
 .scratch-shine{position:absolute;pointer-events:none;top:15%;left:22%;font-size:2rem;color:#fff5d8;text-shadow:0 0 12px white;opacity:.7}
 .save-date{border:0;border-radius:30px;background:#344735;color:#f5ead5;padding:13px 25px;letter-spacing:.12em;font-size:.8rem;box-shadow:0 5px 14px #293c2b24;cursor:pointer;transition:transform .3s ease,background .3s ease}.save-date:active{transform:scale(.97)}.scratch-footnote{color:#93836a;font-style:italic;margin:16px 0 0}
 .countdown-section{background:#ece1ce}
@@ -177,3 +177,6 @@ button{font:inherit}
 @keyframes heroBorderGleam{0%,65%,100%{background-position:100% 0;opacity:.25}82%{background-position:0 0;opacity:.8}}
 @keyframes flowerBloom{0%{opacity:.2;transform:translateY(18px) scale(.6) rotate(-12deg)}72%{opacity:1;transform:translateY(-3px) scale(1.08) rotate(3deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
 @media(prefers-reduced-motion:reduce){#invitation .hero-content>*{opacity:1;transform:none;transition:none}#invitation .drape-top,#invitation .side-drape{opacity:.78;transform:none;transition:none}#invitation .hero-sparkles i{animation:none;opacity:.25}}
+
+/* Mobile polish: make the opening seal unmistakably tappable without altering the curtain animation. */
+@media(max-width:600px){.open-seal{width:clamp(158px,46vw,184px)}.seal-label{font-size:clamp(1.12rem,4.8vw,1.35rem);letter-spacing:.14em}.seal-top,.seal-bottom{font-size:1.35rem}.scratch-star-wrap{width:min(86vw,350px)}}
